@@ -78,3 +78,13 @@ if question:
         "content": answer,
         "sources": sources
     })
+    
+    # ---- TEMPORARY DEBUG PANEL — remove after diagnosing ----
+with st.expander("🔧 Debug: Database Info"):
+    import chromadb
+    debug_client = chromadb.PersistentClient(path="./chroma_db")
+    debug_collection = debug_client.get_collection("bd_legal_docs")
+    all_debug_data = debug_collection.get(include=["metadatas"])
+    sources_found = set(m["source"] for m in all_debug_data["metadatas"])
+    st.write(f"**Total chunks in database:** {debug_collection.count()}")
+    st.write(f"**Documents found:** {sources_found}")
