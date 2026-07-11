@@ -19,7 +19,7 @@ If the answer isn't in the source documents, the system says so instead of guess
 > **A:** 8 weeks preceding delivery and 8 weeks following delivery, totaling 16 weeks.
 > **📄 Source:** `labour-act-2006.pdf`
 
-🔗 **[Live Demo](#)** *(add your Streamlit Cloud link here once deployed)*
+🔗 **[Live Demo](https://bangladesh-legal-rag-assistant.streamlit.app)**
 
 ---
 
