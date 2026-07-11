@@ -25,29 +25,30 @@ If the answer isn't in the source documents, the system says so instead of guess
 
 ## 🏗️ Architecture
 
+```
 User Question
-│
-▼
+      │
+      ▼
 ┌──────────────────┐     ┌───────────────────┐
 │   Vector Search   │     │  BM25 Keyword      │
 │   (semantic)      │     │  Search (exact)     │
 └─────────┬─────────┘     └─────────┬───────────┘
-└───────────┬─────────────┘
-▼
-Combined Candidates
-│
-▼
-Cross-Encoder Reranker
-│
-▼
-Top-K Relevant Chunks
-│
-▼
-Groq LLM (Llama 3.3 70B)
-│
-▼
-Grounded Answer + Sources
-
+          └───────────┬─────────────┘
+                       ▼
+              Combined Candidates
+                       │
+                       ▼
+             Cross-Encoder Reranker
+                       │
+                       ▼
+              Top-K Relevant Chunks
+                       │
+                       ▼
+             Groq LLM (Llama 3.3 70B)
+                       │
+                       ▼
+             Grounded Answer + Sources
+```
 ---
 
 ## 🛠️ Tech Stack
@@ -123,6 +124,7 @@ streamlit run app.py
 
 ## 📁 Project Structure
 
+```
 Bangladesh-legal-RAG-assistant/
 ├── data/raw_pdfs/          # Source legal PDFs
 ├── build_database.py       # Ingestion: PDF → chunks → embeddings → ChromaDB
@@ -133,9 +135,7 @@ Bangladesh-legal-RAG-assistant/
 ├── eval_results.json        # Evaluation output
 ├── requirements.txt
 └── README.md
-
----
-
+```
 ## 🔮 Future Improvements
 
 - Expand document coverage to more citizen-service laws
