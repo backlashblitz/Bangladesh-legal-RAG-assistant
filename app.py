@@ -1,18 +1,36 @@
-"""
-Streamlit web UI for the BD Legal RAG Assistant.
-Run with: streamlit run app.py
-"""
-
 import os
+import sys
 import subprocess
 import streamlit as st
 
 st.set_page_config(page_title="BD Legal RAG Assistant", page_icon="⚖️")
 
-# ---- First-time setup: build the vector database if it doesn't exist yet ----
-if not os.path.exists("./chroma_db"):
+
+def database_ready():
+    """Check if the vector database actually exists AND has data in it."""
+    if not os.path.exists("./chroma_db"):
+        return False
+    try:
+        import chromadb
+        client = chromadb.PersistentClient(path="./chroma_db")
+        collection = client.get_collection("bd_legal_docs")
+        return collection.count() > 0
+    except Exception:
+        return False
+
+
+if not database_ready():
     with st.spinner("First-time setup: building document database... this may take a minute."):
-        subprocess.run(["python", "build_database.py"])
+        result = subprocess.run(
+            [sys.executable, "build_database.py"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            st.error(f"Database build failed:\n{result.stderr}")
+            st.stop()
+
+
 
 from advanced_ask import ask  # imported after the DB check above
 
