@@ -83,23 +83,3 @@ if question:
         "sources": sources
     })
 
-# ---- TEMPORARY DEBUG PANEL — remove after diagnosing ----
-with st.expander("🔧 Debug: Database Info"):
-    import chromadb
-    debug_client = chromadb.PersistentClient(path="./chroma_db")
-    debug_collection = debug_client.get_collection("bd_legal_docs")
-    all_debug_data = debug_collection.get(include=["metadatas"])
-    sources_found = set(m["source"] for m in all_debug_data["metadatas"])
-    st.write(f"**Total chunks in database:** {debug_collection.count()}")
-    st.write(f"**Documents found:** {sources_found}")
-
-    st.divider()
-    st.write("**Test retrieval directly:**")
-    debug_question = st.text_input("Enter a test question:")
-    if debug_question:
-        from advanced_ask import hybrid_search
-        test_chunks, test_sources = hybrid_search(debug_question)
-        for i, (chunk, source) in enumerate(zip(test_chunks, test_sources)):
-            st.write(f"**Chunk {i+1} (from {source}):**")
-            st.write(chunk[:300] + "...")
-            st.write("---")
