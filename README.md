@@ -145,6 +145,4 @@ Bangladesh-legal-RAG-assistant/
 
 ---
 
-## 👤 Author
 
-Built by **Rahin** — CS student building toward an AI/ML Engineering career, with a focus on practical, domain-grounded AI applications for Bangladesh.
