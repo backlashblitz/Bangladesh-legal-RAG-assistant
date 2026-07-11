@@ -1,3 +1,8 @@
+"""
+Streamlit web UI for the BD Legal RAG Assistant.
+Run with: streamlit run app.py
+"""
+
 import os
 import sys
 import subprocess
@@ -29,7 +34,6 @@ if not database_ready():
         if result.returncode != 0:
             st.error(f"Database build failed:\n{result.stderr}")
             st.stop()
-
 
 
 from advanced_ask import ask  # imported after the DB check above
@@ -78,8 +82,8 @@ if question:
         "content": answer,
         "sources": sources
     })
-    
-    # ---- TEMPORARY DEBUG PANEL — remove after diagnosing ----
+
+# ---- TEMPORARY DEBUG PANEL — remove after diagnosing ----
 with st.expander("🔧 Debug: Database Info"):
     import chromadb
     debug_client = chromadb.PersistentClient(path="./chroma_db")
@@ -88,3 +92,14 @@ with st.expander("🔧 Debug: Database Info"):
     sources_found = set(m["source"] for m in all_debug_data["metadatas"])
     st.write(f"**Total chunks in database:** {debug_collection.count()}")
     st.write(f"**Documents found:** {sources_found}")
+
+    st.divider()
+    st.write("**Test retrieval directly:**")
+    debug_question = st.text_input("Enter a test question:")
+    if debug_question:
+        from advanced_ask import hybrid_search
+        test_chunks, test_sources = hybrid_search(debug_question)
+        for i, (chunk, source) in enumerate(zip(test_chunks, test_sources)):
+            st.write(f"**Chunk {i+1} (from {source}):**")
+            st.write(chunk[:300] + "...")
+            st.write("---")
