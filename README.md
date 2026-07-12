@@ -90,7 +90,12 @@ Full breakdown in [`eval_results.json`](./eval_results.json).
 
 ### Known limitation
 
-Retrieval occasionally underranks the correct chunk when query phrasing diverges from source terminology (e.g. "file a complaint" vs. the source's "lodge a complaint"). Diagnosed via manual chunk inspection — confirmed the correct section exists cleanly in the vector store but scores below threshold with the free embedding/reranker models used here. A larger embedding model (e.g. OpenAI `text-embedding-3-large` or Cohere) would likely close this gap at added inference cost.
+Retrieval occasionally underranks the correct chunk when query phrasing diverges from source terminology, or when a keyword appears across multiple unrelated documents. Two confirmed cases, diagnosed via manual chunk inspection:
+
+1. **Paraphrase gap:** "file a complaint" vs. the source's "lodge a complaint" — the correct RTI Act section exists cleanly in the vector store but scores below threshold in reranking.
+2. **Cross-document keyword collision:** asking about a product "refund" pulls in Income Tax Act chunks (which discuss tax refunds) alongside the relevant Consumer Rights Act chunks, because BM25 keyword search matches the literal word "refund" regardless of legal context.
+
+Both stem from the same root cause: the free, local embedding/reranker models used here (chosen for zero-cost deployment) are less robust to phrasing variation and cross-domain word collisions than larger paid models. A production system would likely use a larger embedding model (e.g. OpenAI `text-embedding-3-large` or Cohere) and/or weight BM25 keyword matches by relevance score rather than raw term frequency, at added inference cost.
 
 ---
 
