@@ -79,12 +79,12 @@ User Question
 
 ## 📊 Evaluation Results
 
-Evaluated on a 5-question test set spanning all 5 legal domains, using an LLM-as-judge approach (Groq scoring faithfulness and relevance on a 1-5 scale):
+Evaluated on a 16-question test set spanning all 5 legal domains plus an out-of-domain guardrail check, using an LLM-as-judge approach (Groq scoring faithfulness and relevance on a 1-5 scale):
 
 | Metric | Score |
 |---|---|
-| **Faithfulness** | 4.80 / 5 |
-| **Relevance** | 4.40 / 5 |
+| **Faithfulness** | 4.75 / 5 |
+| **Relevance** | 4.56 / 5 |
 
 Full breakdown in [`eval_results.json`](./eval_results.json).
 
@@ -145,6 +145,4 @@ Bangladesh-legal-RAG-assistant/
 
 ---
 
-## 👤 Author
 
-Built by **Rahin** — CS student building toward an AI/ML Engineering career, with a focus on practical, domain-grounded AI applications for Bangladesh.

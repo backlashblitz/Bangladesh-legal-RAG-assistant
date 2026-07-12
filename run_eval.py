@@ -8,7 +8,10 @@ from eval_data import test_cases
 from groq import Groq
 import json
 
-GROQ_API_KEY = "gsk_PASTE_YOUR_KEY_HERE"
+import streamlit as st
+import os
+
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY", "gsk_PASTE_YOUR_KEY_HERE"))
 groq_client = Groq(api_key=GROQ_API_KEY)
 
 
