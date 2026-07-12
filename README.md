@@ -67,13 +67,15 @@ User Question
 
 ## 📚 Data Sources
 
-5 official Bangladeshi acts, sourced from [bdlaws.minlaw.gov.bd](http://bdlaws.minlaw.gov.bd) and the FAO legal database:
+7 official Bangladeshi acts, sourced from [bdlaws.minlaw.gov.bd](http://bdlaws.minlaw.gov.bd) and other official sources:
 
 - Right to Information Act, 2009
 - Bangladesh Labour Act, 2006
 - Consumers' Right Protection Act, 2009
 - Anti-Corruption Commission Act, 2004
 - Income Tax Act, 2023
+- Births and Deaths Registration Act, 2004
+- Citizenship Act, 1951
 
 ---
 
