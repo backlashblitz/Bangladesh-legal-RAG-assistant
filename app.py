@@ -39,7 +39,7 @@ if not database_ready():
 from advanced_ask import ask  # imported after the DB check above
 
 st.title("⚖️ BD Legal RAG Assistant")
-st.caption("Ask questions about Bangladeshi law — Right to Information, Labour, Consumer Rights, Anti-Corruption, and Income Tax")
+st.caption("Ask questions about Bangladeshi law — Right to Information, Labour, Consumer Rights, Anti-Corruption, Income Tax, Birth/Death Registration, and Citizenship")
 
 # Keep chat history across interactions
 if "messages" not in st.session_state:
