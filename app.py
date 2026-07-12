@@ -12,14 +12,22 @@ st.set_page_config(page_title="BD Legal RAG Assistant", page_icon="⚖️")
 
 
 def database_ready():
-    """Check if the vector database actually exists AND has data in it."""
+    """Check if the vector database exists AND contains all current PDFs."""
     if not os.path.exists("./chroma_db"):
         return False
     try:
         import chromadb
         client = chromadb.PersistentClient(path="./chroma_db")
         collection = client.get_collection("bd_legal_docs")
-        return collection.count() > 0
+        if collection.count() == 0:
+            return False
+
+        # Check that every PDF currently in raw_pdfs is represented in the database
+        pdf_files = set(f for f in os.listdir("data/raw_pdfs") if f.endswith(".pdf"))
+        all_data = collection.get(include=["metadatas"])
+        indexed_sources = set(m["source"] for m in all_data["metadatas"])
+
+        return pdf_files.issubset(indexed_sources)
     except Exception:
         return False
 
