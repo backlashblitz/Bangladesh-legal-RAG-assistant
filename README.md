@@ -10,7 +10,7 @@
 
 ## 🧠 What it does
 
-Ask natural-language questions about Bangladeshi law — **Right to Information, Labour Rights, Consumer Protection, Anti-Corruption, and Income Tax** — and get grounded, source-cited answers pulled directly from the official acts, not from the LLM's general knowledge.
+Ask natural-language questions about Bangladeshi law — **Right to Information, Labour Rights, Consumer Protection, Anti-Corruption, Income Tax, Births and Deaths Registration, and Citizenship Act** — and get grounded, source-cited answers pulled directly from the official acts, not from the LLM's general knowledge.
 
 If the answer isn't in the source documents, the system says so instead of guessing — verified during evaluation with out-of-domain test questions.
 
