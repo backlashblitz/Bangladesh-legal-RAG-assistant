@@ -55,11 +55,15 @@ def hybrid_search(question, vector_k=15, bm25_k=15, final_k=5):
     reranked = sorted(zip(combined_chunks, rerank_scores), key=lambda x: x[1], reverse=True)
     top_chunks = [chunk for chunk, score in reranked[:final_k]]
 
-    # ---- 5. Find which document each top chunk came from (for source tracking) ----
+    # ---- 5. Find which document (and section, if available) each top chunk came from ----
     sources = []
     for chunk in top_chunks:
         idx = all_chunks.index(chunk)
-        sources.append(all_metadatas[idx]["source"])
+        meta = all_metadatas[idx]
+        if meta.get("section_number"):
+            sources.append(f"{meta['source']} (Section {meta['section_number']})")
+        else:
+            sources.append(meta["source"])
 
     return top_chunks, sources
 

@@ -1,14 +1,29 @@
 """
-STEP 1 SCRIPT: Read PDFs -> break into chunks -> save into a local database.
+STEP 1 SCRIPT (v2): Structure-aware chunking.
+Splits documents by legal section boundaries (e.g. "25. Making of Complaint")
+instead of blind character windows, and stores section number/title as metadata.
+Falls back to fixed-size chunking if no clear section pattern is found.
+
 Run this with: python build_database.py
 """
 
 import os
+import re
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
 import chromadb
 
-# ---- 1. Read text out of every PDF in data/raw_pdfs ----
+# Matches things like: "25. Making of Complaint, disposal, etc.⎯"
+# Looks for a newline, then a number (1-4 digits), a period, then a capital-letter title.
+SECTION_PATTERN = re.compile(r'\n\s*(\d{1,4})\.\s+([A-Z][^\n]{2,100})')
+
+MAX_SECTION_CHARS = 1200   # if a section is longer than this, sub-chunk it
+SUB_CHUNK_SIZE = 800
+SUB_CHUNK_OVERLAP = 100
+FALLBACK_CHUNK_SIZE = 800
+FALLBACK_OVERLAP = 100
+
+
 def extract_text_from_pdf(path):
     reader = PdfReader(path)
     full_text = ""
@@ -18,27 +33,76 @@ def extract_text_from_pdf(path):
             full_text += text + "\n"
     return full_text
 
-# ---- 2. Break long text into small chunks (like paragraphs) ----
-def split_into_chunks(text, chunk_size=800, overlap=100):
+
+def split_by_sections(text):
+    """
+    Returns a list of dicts: {"text": ..., "section_number": ..., "section_title": ...}
+    Falls back to None values if no section markers are found at all.
+    """
+    matches = list(SECTION_PATTERN.finditer(text))
+
+    # If we found very few section markers, this PDF probably didn't parse cleanly
+    # enough for structure-aware splitting - signal fallback needed.
+    if len(matches) < 3:
+        return None
+
+    sections = []
+    for i, match in enumerate(matches):
+        section_number = match.group(1)
+        section_title = match.group(2).strip()
+        start = match.start()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        section_text = text[start:end].strip()
+        if len(section_text) > 30:  # skip near-empty matches
+            sections.append({
+                "text": section_text,
+                "section_number": section_number,
+                "section_title": section_title
+            })
+    return sections
+
+
+def sub_chunk_if_needed(section_text, section_number, section_title):
+    """If a section is too long, split it further while keeping the same section metadata."""
+    if len(section_text) <= MAX_SECTION_CHARS:
+        return [{"text": section_text, "section_number": section_number, "section_title": section_title}]
+
+    sub_chunks = []
+    start = 0
+    while start < len(section_text):
+        end = start + SUB_CHUNK_SIZE
+        chunk = section_text[start:end].strip()
+        if len(chunk) > 50:
+            sub_chunks.append({"text": chunk, "section_number": section_number, "section_title": section_title})
+        start += SUB_CHUNK_SIZE - SUB_CHUNK_OVERLAP
+    return sub_chunks
+
+
+def fallback_chunk(text):
+    """Old-style fixed-size chunking, used when section detection fails."""
     chunks = []
     start = 0
     while start < len(text):
-        end = start + chunk_size
+        end = start + FALLBACK_CHUNK_SIZE
         chunk = text[start:end].strip()
-        if len(chunk) > 50:  # skip tiny useless chunks
-            chunks.append(chunk)
-        start += chunk_size - overlap
+        if len(chunk) > 50:
+            chunks.append({"text": chunk, "section_number": None, "section_title": None})
+        start += FALLBACK_CHUNK_SIZE - FALLBACK_OVERLAP
     return chunks
 
-# ---- 3. Load the free embedding model (downloads once, ~90MB) ----
+
 print("Loading embedding model... (first time takes a minute)")
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# ---- 4. Set up the local database ----
 client = chromadb.PersistentClient(path="./chroma_db")
+# Delete old collection if it exists, so we don't mix old flat chunks with new structured ones
+try:
+    client.delete_collection("bd_legal_docs")
+    print("Cleared old collection to rebuild with structure-aware chunking.")
+except Exception:
+    pass
 collection = client.get_or_create_collection("bd_legal_docs")
 
-# ---- 5. Process every PDF in the folder ----
 pdf_folder = "data/raw_pdfs"
 pdf_files = [f for f in os.listdir(pdf_folder) if f.endswith(".pdf")]
 
@@ -52,16 +116,33 @@ else:
         text = extract_text_from_pdf(full_path)
         print(f"  Extracted {len(text)} characters")
 
-        chunks = split_into_chunks(text)
-        print(f"  Split into {len(chunks)} chunks")
+        sections = split_by_sections(text)
 
-        embeddings = model.encode(chunks).tolist()
+        if sections is None:
+            print("  No clear section structure detected - using fallback chunking")
+            raw_chunks = fallback_chunk(text)
+        else:
+            print(f"  Detected {len(sections)} legal sections")
+            raw_chunks = []
+            for sec in sections:
+                raw_chunks.extend(sub_chunk_if_needed(sec["text"], sec["section_number"], sec["section_title"]))
 
-        ids = [f"{filename}_{i}" for i in range(len(chunks))]
-        metadatas = [{"source": filename, "chunk_index": i} for i in range(len(chunks))]
+        print(f"  Final chunk count: {len(raw_chunks)}")
+
+        chunk_texts = [c["text"] for c in raw_chunks]
+        embeddings = model.encode(chunk_texts).tolist()
+
+        ids = [f"{filename}_{i}" for i in range(len(raw_chunks))]
+        metadatas = []
+        for i, c in enumerate(raw_chunks):
+            meta = {"source": filename, "chunk_index": i}
+            if c["section_number"]:
+                meta["section_number"] = c["section_number"]
+                meta["section_title"] = c["section_title"][:100]  # keep metadata values short
+            metadatas.append(meta)
 
         collection.add(
-            documents=chunks,
+            documents=chunk_texts,
             embeddings=embeddings,
             ids=ids,
             metadatas=metadatas
