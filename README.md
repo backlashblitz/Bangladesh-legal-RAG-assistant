@@ -85,10 +85,12 @@ Evaluated on a 16-question test set spanning all 5 legal domains plus an out-of-
 
 | Metric | Score |
 |---|---|
-| **Faithfulness** | 4.75 / 5 |
-| **Relevance** | 4.56 / 5 |
+| **Faithfulness** | 4.88 / 5 |
+| **Relevance** | 4.25 / 5 |
 
 Full breakdown in [`eval_results.json`](./eval_results.json).
+
+**Note on structure-aware chunking:** switching from fixed-size to legal-section-boundary chunking improved faithfulness (4.75 → 4.88) — answers are more consistently grounded in complete, well-formed legal sections rather than arbitrary text windows. However, relevance saw a slight dip (4.56 → 4.25), likely because long sections that get sub-chunked can separate a section's identifying opening text from its later detail, occasionally causing the most relevant fragment to rank lower. This is a real tradeoff of structure-aware chunking, not an unambiguous improvement.
 
 ### Known limitation
 
