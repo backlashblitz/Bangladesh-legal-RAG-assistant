@@ -98,10 +98,7 @@ Full breakdown in [`eval_results.json`](./eval_results.json).
 
 2. **Cross-document keyword collision:** Asking about a product "refund" can surface Income Tax Act chunks (which discuss tax refunds) alongside relevant Consumer Rights Act chunks, since BM25 matches the literal word regardless of legal context. A document-classification approach (boosting chunks from the most semantically likely document) was tested and successfully fixed this specific case, but measurably reduced overall answer relevance (4.56 → 4.06 across the evaluation set) by over-promoting less-relevant chunks within the "boosted" document. This was reverted after evaluation — a useful finding that a targeted fix for one failure mode can regress others, and that fixed-strength heuristic boosts are risky without more careful tuning or a held-out validation set.
 
-1. **Paraphrase gap:** "file a complaint" vs. the source's "lodge a complaint" — the correct RTI Act section exists cleanly in the vector store but scores below threshold in reranking.
-2. **Cross-document keyword collision:** asking about a product "refund" pulls in Income Tax Act chunks (which discuss tax refunds) alongside the relevant Consumer Rights Act chunks, because BM25 keyword search matches the literal word "refund" regardless of legal context.
-
-Both stem from the same root cause: the free, local embedding/reranker models used here (chosen for zero-cost deployment) are less robust to phrasing variation and cross-domain word collisions than larger paid models. A production system would likely use a larger embedding model (e.g. OpenAI `text-embedding-3-large` or Cohere) and/or weight BM25 keyword matches by relevance score rather than raw term frequency, at added inference cost.
+Both limitations point to the same underlying tradeoff: the free, local embedding/reranker models used here (chosen for zero-cost deployment) are less robust to phrasing variation and cross-domain ambiguity than larger paid models would be.
 
 
 
